@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compact Replay Team Viewer</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --border: #334155;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    input, textarea {
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: white;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    textarea {
+      flex: 1;
+      resize: vertical;
+    }
+    .group-input {
+      flex: 1;
+    }
+    button {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+    button:hover { opacity: 0.85; }
+    
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    /* Alt Manager Styles */
+    .alt-manager, .stats-manager {
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .alt-manager summary, .stats-manager summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--accent);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .alt-manager .input-row, .stats-manager .input-row {
+      margin-top: 10px;
+    }
+    .alt-group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .alt-group-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+    .alt-group-row .alt-group-alts {
+      color: #94a3b8;
+    }
+    .alt-group-row button {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      background: #ef4444;
+      color: white;
+    }
+
+    /* Stats Table Styles */
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    .stats-table th, .stats-table td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-table th {
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .stats-row {
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .stats-row:hover {
+      background: #334155 !important;
+    }
+    .sprite-cell {
+      width: 50px;
+      text-align: center;
+    }
+
+    .hidden { display: none !important; }
+
+    /* Expanded Details Styles */
+    .details-row td {
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 12px 14px;
+      background: #0f172a60;
+      margin: 0;
+    }
+    .stats-details > div {
+      flex: 1;
+      min-width: 140px;
+    }
+    .stats-details h4 {
+      margin: 0 0 6px 0;
+      color: var(--accent);
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stats-details ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+    }
+    .stats-details li {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .stats-details .count {
+      color: #94a3b8;
+    }
+
+    /* Group Container Styles */
+    .replay-group {
+      margin-bottom: 1.5rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+    }
+    .group-header {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .group-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .remove-group-btn, .pin-group-btn {
+      background: transparent;
+      padding: 2px 8px;
+      font-size: 1rem;
+    }
+    .remove-group-btn { color: #64748b; }
+    .remove-group-btn:hover { color: #ef4444; }
+    .pin-group-btn { color: #64748b; }
+    .pin-group-btn:hover { color: #fbbf24; }
+    .pin-group-btn.pinned { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.4); }
+
+    .replay-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .player-column {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .player-column.p2 {
+      justify-content: flex-end;
+    }
+
+    .player-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .player-name.winner {
+      color: #fde68a;
+      text-shadow: 0 0 10px rgba(251, 191, 36, 0.5), 0 0 4px rgba(251, 191, 36, 0.3);
+    }
+
+    .copy-team-btn {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0 4px;
+      font-size: 1rem;
+      transition: color 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+    }
+    .copy-team-btn:hover {
+      color: #38bdf8;
+    }
+
+    .arceus-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fbbf24;
+      background: #451a03a0;
+      border: 1px solid #78350f;
+      padding: 1px 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .sprite-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: #0f172a60;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .sprite-wrap {
+      position: relative;
+      width: 40px;
+      height: 30px;
+      flex: none;
+      cursor: context-menu;
+    }
+    .sprite-wrap img.mon-sprite {
+      width: 40px;
+      height: 30px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      display: block;
+    }
+    .item-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      background: #000000b0;
+      border: 1px solid #475569;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .item-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .center-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .tier-badge {
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: #94a3b8;
+      background: #0f172a80;
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .vs-badge {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: background-color 0.15s ease;
+      display: inline-block;
+    }
+    .vs-badge:hover {
+      background: #38bdf820;
+      text-decoration: underline;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .action-buttons button {
+      background: transparent;
+      border: none;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .remove-card-btn { color: #64748b; }
+    .remove-card-btn:hover { color: #ef4444; background: #334155; }
+    .pin-card-btn { color: #64748b; }
+    .pin-card-btn:hover { color: #fbbf24; background: #334155; }
+    .pin-card-btn.pinned { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.4); }
+
+    /* Custom Tooltip Styles */
+    #custom-tooltip {
+      position: absolute;
+      display: none;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #38bdf8;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      pointer-events: none;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+    #custom-tooltip.frozen {
+      pointer-events: auto;
+      border-color: #fbbf24;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Compact Replay Extractor</h2>
+
+  <details class="alt-manager">
+    <summary>Manage Player Alts (optional)</summary>
+    <div class="input-row">
+      <input type="text" id="altMainName" class="group-input" placeholder="Main name (e.g. Wolfe)" />
+      <input type="text" id="altNames" class="group-input" placeholder="Alt account names, comma-separated" />
+      <button onclick="saveAltGroup()">Save</button>
+    </div>
+    <div id="altGroupsList" class="alt-group-list"></div>
+  </details>
+
+  <details class="stats-manager">
+    <summary>Player Usage Stats</summary>
+    <div class="input-row">
+      <input type="text" id="statsPlayerName" class="group-input" placeholder="Enter Player Name (searches loaded replays)" />
+      <button onclick="calculatePlayerStats()">Get Stats</button>
+    </div>
+    <div id="statsResults"></div>
+  </details>
+
+  <div class="input-container">
+    <div class="input-row">
+      <input type="text" id="groupName" class="group-input" placeholder="Optional Group Name (e.g. NDPL VI)" />
+      <button onclick="parseReplayUI()">Add Replays</button>
+      <button onclick="clearAllReplays()" class="btn-danger">Clear All</button>
+    </div>
+    <div class="input-row">
+      <textarea id="replayUrl" rows="3" placeholder="Paste Showdown Replay URL(s)... one per line"></textarea>
+    </div>
+  </div>
+
+  <div id="replayList"></div>
+
+  <script>
+    const leftSidePlayers = new Set();
+    const globalPlayerTally = {};
+    const aliasGroups = {};
+    const ALT_GROUPS_STORAGE_KEY = 'ps-replay-viewer-alt-groups';
+    
+    // Store parsed data globally for the stats calculator
+    const activeReplaysData = new Map();
+
+    let pinnedReplays = [];
+    const PINNED_STORAGE_KEY = 'ps-replay-viewer-pinned';
+
+    // REMOVED 'complete' so Zygarde isn't artificially split by form deduplication.
+    const regexUpgradedForm = /-(crowned|primal|mega|ultra|gmax)/i;
+    const regexPoltergeist = /poltergeist/i;
+    const regexFromItem = /^\[from\] item:\s*(.+)$/i;
+    const regexFromAbility = /^\[from\] ability:\s*(.+)$/i;
+    const regexOf = /^\[of\]\s*(.+)$/i;
+    
+    const regexNonAlphaNum = /[^a-z0-9]/g;
+    const regexSlug = /[^a-z0-9-]/g; 
+
+    const clipboardSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
+
+    function toId(text) {
+      return (text || '').toLowerCase().replace(regexNonAlphaNum, '');
+    }
+
+    const escapeHtml = (str) => {
+      return (str || '').toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    // Helper to group temporary mid-battle forms to their base identity permanently
+    function getNormalizedSpecies(speciesRaw) {
+      if (!speciesRaw) return '';
+      let species = speciesRaw.trim();
+      
+      // Enforce Zygarde Grouping 
+      if (species === 'Zygarde-Complete') return 'Zygarde';
+      if (species === 'Zygarde-10%-Complete' || species === 'Zygarde-10-Complete') return 'Zygarde-10%';
+      
+      // Also catch standard battle-only forms that shouldn't inflate tracked usage
+      const battleForms = [
+        'Aegislash-Blade', 'Darmanitan-Zen', 'Darmanitan-Galar-Zen', 'Meloetta-Pirouette', 
+        'Wishiwashi-School', 'Minior-Meteor', 'Eiscue-Noice', 'Morpeko-Hangry', 
+        'Palafin-Hero', 'Terapagos-Terastal', 'Terapagos-Stellar'
+      ];
+      if (battleForms.includes(species)) {
+        return species.split('-')[0];
+      }
+      return species;
+    }
+
+    function loadStorage() {
+      try {
+        const rawAlts = localStorage.getItem(ALT_GROUPS_STORAGE_KEY);
+        if (rawAlts) {
+          const parsed = JSON.parse(rawAlts);
+          for (const key in parsed) {
+            if (parsed[key].alts) parsed[key].alts = parsed[key].alts.map(a => toId(a));
+          }
+          Object.assign(aliasGroups, parsed);
+        }
+        
+        const rawPinned = localStorage.getItem(PINNED_STORAGE_KEY);
+        if (rawPinned) {
+          pinnedReplays = JSON.parse(rawPinned);
+          if (pinnedReplays.length > 0) {
+             processReplayBatch(pinnedReplays);
+          }
+        }
+      } catch (err) { console.warn('Could not load saved data:', err); }
+    }
+
+    function persistAltGroups() {
+      localStorage.setItem(ALT_GROUPS_STORAGE_KEY, JSON.stringify(aliasGroups));
+    }
+    
+    function persistPinnedReplays() {
+      localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pinnedReplays));
+    }
+
+    function togglePinReplay(url, groupName, btn) {
+      const idx = pinnedReplays.findIndex(r => r.url === url);
+      if (idx > -1) {
+        pinnedReplays.splice(idx, 1);
+        btn.classList.remove('pinned');
+      } else {
+        pinnedReplays.push({ url, groupName });
+        btn.classList.add('pinned');
+      }
+      persistPinnedReplays();
+    }
+
+    function togglePinGroup(groupName, btn) {
+      const groupEl = document.querySelector(`.replay-group[data-group="${groupName}"]`);
+      if (!groupEl) return;
+      
+      const cards = groupEl.querySelectorAll('.replay-card');
+      const isCurrentlyPinned = btn.classList.contains('pinned');
+      
+      if (isCurrentlyPinned) {
+        btn.classList.remove('pinned');
+        cards.forEach(card => {
+          const url = card.dataset.url;
+          const idx = pinnedReplays.findIndex(r => r.url === url);
+          if (idx > -1) pinnedReplays.splice(idx, 1);
+          card.querySelector('.pin-card-btn').classList.remove('pinned');
+        });
+      } else {
+        btn.classList.add('pinned');
+        cards.forEach(card => {
+          const url = card.dataset.url;
+          if (!pinnedReplays.some(r => r.url === url)) {
+            pinnedReplays.push({ url, groupName });
+          }
+          card.querySelector('.pin-card-btn').classList.add('pinned');
+        });
+      }
+      persistPinnedReplays();
+    }
+
+    function saveAltGroup() {
+      const mainInput = document.getElementById('altMainName');
+      const altsInput = document.getElementById('altNames');
+      const mainName = mainInput.value.trim();
+      const altsRaw = altsInput.value.trim();
+      if (!mainName || !altsRaw) return;
+
+      const mainKey = toId(mainName);
+      const alts = altsRaw.split(',').map(a => toId(a.trim())).filter(a => a.length > 0);
+      aliasGroups[mainKey] = { mainName, alts };
+
+      persistAltGroups();
+      renderAltGroupsList();
+      mainInput.value = ''; altsInput.value = '';
+    }
+
+    function removeAltGroup(mainKey) {
+      delete aliasGroups[mainKey];
+      persistAltGroups();
+      renderAltGroupsList();
+    }
+
+    function renderAltGroupsList() {
+      const container = document.getElementById('altGroupsList');
+      container.innerHTML = '';
+      Object.keys(aliasGroups).forEach(mainKey => {
+        const group = aliasGroups[mainKey];
+        const row = document.createElement('div');
+        row.className = 'alt-group-row';
+        row.innerHTML = `
+          <span><strong>${group.mainName}</strong> <span class="alt-group-alts">= ${group.alts.join(', ')}</span></span>
+          <button onclick="removeAltGroup('${mainKey}')">Remove</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function resolvePlayerIdentity(rawName) {
+      const id = toId(rawName);
+      for (const mainKey in aliasGroups) {
+        const group = aliasGroups[mainKey];
+        if (mainKey === id) return { canonicalKey: mainKey, displayName: group.mainName };
+        if (group.alts.some(alt => toId(alt) === id)) return { canonicalKey: mainKey, displayName: `${rawName} (${group.mainName})` };
+      }
+      return { canonicalKey: id, displayName: rawName };
+    }
+
+    window.removeReplayCard = function(btn, url) {
+      btn.closest('.replay-card').remove();
+      activeReplaysData.delete(url);
+    };
+
+    window.removeReplayGroup = function(btn, groupName) {
+      const groupEl = btn.closest('.replay-group');
+      const cards = groupEl.querySelectorAll('.replay-card');
+      cards.forEach(card => activeReplaysData.delete(card.dataset.url));
+      groupEl.remove();
+    };
+
+    function clearAllReplays() {
+      document.getElementById('replayList').innerHTML = '';
+      document.getElementById('statsResults').innerHTML = '';
+      leftSidePlayers.clear();
+      activeReplaysData.clear();
+      for (const key in globalPlayerTally) delete globalPlayerTally[key];
+    }
+
+    async function parseReplayUI() {
+      const urlInput = document.getElementById('replayUrl');
+      const groupInput = document.getElementById('groupName');
+      const groupName = groupInput.value.trim();
+      
+      const urls = urlInput.value.split('\n').map(u => u.trim()).filter(u => u.length > 0);
+      if (urls.length === 0) return;
+
+      const batch = urls.map(url => ({ url, groupName }));
+      await processReplayBatch(batch);
+      
+      urlInput.value = '';
+      groupInput.value = '';
+    }
+
+    async function processReplayBatch(batch) {
+      const fetchPromises = batch.map(async (item) => {
+        const cleanUrl = item.url.split('?')[0].replace(/\/$/, '');
+        if (document.querySelector(`.replay-card[data-url="${cleanUrl}"]`)) return null; 
+        
+        const data = await fetchReplayData(cleanUrl);
+        if (data) return { cleanUrl, groupName: item.groupName, data };
+        return null;
+      });
+      
+      const results = (await Promise.all(fetchPromises)).filter(Boolean);
+      
+      for (const res of results) {
+        const p1Key = resolvePlayerIdentity(res.data.p1Name).canonicalKey;
+        const p2Key = resolvePlayerIdentity(res.data.p2Name).canonicalKey;
+        globalPlayerTally[p1Key] = (globalPlayerTally[p1Key] || 0) + 1;
+        globalPlayerTally[p2Key] = (globalPlayerTally[p2Key] || 0) + 1;
+      }
+      
+      const groupElementsCache = new Map();
+      const targetList = document.getElementById('replayList');
+
+      for (const res of results) {
+         let targetContainer = targetList;
+         if (res.groupName) {
+           let existingGroup = groupElementsCache.get(res.groupName) || Array.from(targetList.querySelectorAll('.replay-group')).find(g => g.dataset.group === res.groupName);
+           
+           if (!existingGroup) {
+             existingGroup = document.createElement('div');
+             existingGroup.className = 'replay-group';
+             existingGroup.dataset.group = res.groupName;
+             
+             const isGroupPinned = pinnedReplays.some(r => r.groupName === res.groupName);
+             
+             const header = document.createElement('div');
+             header.className = 'group-header';
+             header.innerHTML = `
+                <span>${res.groupName}</span>
+                <div class="group-actions">
+                  <button class="pin-group-btn ${isGroupPinned ? 'pinned' : ''}" title="Save Group" onclick="togglePinGroup('${res.groupName}', this)">★</button>
+                  <button class="remove-group-btn" title="Clear Group" onclick="removeReplayGroup(this, '${res.groupName}')">✕</button>
+                </div>
+             `;
+             
+             existingGroup.appendChild(header);
+             targetList.prepend(existingGroup);
+             groupElementsCache.set(res.groupName, existingGroup);
+           }
+           targetContainer = existingGroup;
+         }
+         
+         const d = res.data;
+         const p1Identity = resolvePlayerIdentity(d.p1Name);
+         const p2Identity = resolvePlayerIdentity(d.p2Name);
+
+         let leftWon = false, rightWon = false;
+         if (d.winnerRaw) {
+           const winId = toId(d.winnerRaw);
+           if (winId === toId(d.p1Name)) leftWon = true;
+           else if (winId === toId(d.p2Name)) rightWon = true;
+         }
+
+         let finalP1Items = d.itemsByPlayer.p1;
+         let finalP2Items = d.itemsByPlayer.p2;
+         let finalP1Moves = d.movesByPlayer.p1;
+         let finalP2Moves = d.movesByPlayer.p2;
+         let finalP1Abilities = d.abilitiesByPlayer.p1;
+         let finalP2Abilities = d.abilitiesByPlayer.p2;
+         let finalP1Tera = d.teraByPlayer.p1;
+         let finalP2Tera = d.teraByPlayer.p2;
+         let finalP1 = d.finalP1;
+         let finalP2 = d.finalP2;
+
+         let leftIdentity = p1Identity, rightIdentity = p2Identity;
+         const p1IsTracked = aliasGroups.hasOwnProperty(p1Identity.canonicalKey);
+         const p2IsTracked = aliasGroups.hasOwnProperty(p2Identity.canonicalKey);
+         
+         const p1Tally = globalPlayerTally[p1Identity.canonicalKey] || 0;
+         const p2Tally = globalPlayerTally[p2Identity.canonicalKey] || 0;
+
+         let shouldSwap = false;
+         if (p2IsTracked && !p1IsTracked) {
+             shouldSwap = true;
+         } else if (p1IsTracked && !p2IsTracked) {
+             shouldSwap = false;
+         } else {
+             if (p2Tally > p1Tally) {
+                 shouldSwap = true;
+             } else if (p2Tally === p1Tally) {
+                 if (leftSidePlayers.has(p2Identity.canonicalKey) && !leftSidePlayers.has(p1Identity.canonicalKey)) {
+                     shouldSwap = true;
+                 }
+             }
+         }
+
+         if (shouldSwap) {
+           leftIdentity = p2Identity; rightIdentity = p1Identity;
+           [finalP1, finalP2] = [finalP2, finalP1];
+           [finalP1Items, finalP2Items] = [finalP2Items, finalP1Items];
+           [finalP1Moves, finalP2Moves] = [finalP2Moves, finalP1Moves];
+           [finalP1Abilities, finalP2Abilities] = [finalP2Abilities, finalP1Abilities];
+           [finalP1Tera, finalP2Tera] = [finalP2Tera, finalP1Tera];
+           [leftWon, rightWon] = [rightWon, leftWon];
+         }
+
+         leftSidePlayers.add(leftIdentity.canonicalKey);
+         
+         // Store processed data globally for stats retrieval including items, moves, abilities, tera
+         activeReplaysData.set(res.cleanUrl, {
+            p1Id: leftIdentity.canonicalKey,
+            p2Id: rightIdentity.canonicalKey,
+            p1Team: finalP1,
+            p2Team: finalP2,
+            p1Won: leftWon,
+            p2Won: rightWon,
+            hasWinner: leftWon || rightWon,
+            p1Items: finalP1Items,
+            p2Items: finalP2Items,
+            p1Moves: finalP1Moves,
+            p2Moves: finalP2Moves,
+            p1Abilities: finalP1Abilities,
+            p2Abilities: finalP2Abilities,
+            p1Tera: finalP1Tera,
+            p2Tera: finalP2Tera
+         });
+
+         renderReplayRow(
+            leftIdentity.displayName, finalP1, finalP1Items, finalP1Moves, finalP1Abilities, finalP1Tera, leftWon,
+            rightIdentity.displayName, finalP2, finalP2Items, finalP2Moves, finalP2Abilities, finalP2Tera, rightWon,
+            d.tierName, targetContainer, res.cleanUrl, res.groupName
+         );
+      }
+    }
+
+    function generateDetailsList(dict, totalUsage) {
+      const sorted = Object.entries(dict).sort((a, b) => b[1] - a[1]);
+      if (sorted.length === 0) return `<ul><li><span style="color: #64748b;">No data</span></li></ul>`;
+      let h = `<ul>`;
+      for (const [key, count] of sorted) {
+         const pct = Math.round((count / totalUsage) * 100);
+         h += `<li><span>${escapeHtml(key)}</span><span class="count">${count} (${pct}%)</span></li>`;
+      }
+      h += `</ul>`;
+      return h;
+    }
+
+    window.calculatePlayerStats = function() {
+      const inputName = document.getElementById('statsPlayerName').value.trim();
+      const resultsContainer = document.getElementById('statsResults');
+      
+      if (!inputName) {
+        resultsContainer.innerHTML = '';
+        return;
+      }
+
+      const targetId = resolvePlayerIdentity(inputName).canonicalKey;
+      const stats = {};
+      let totalGames = 0;
+
+      activeReplaysData.forEach(data => {
+        let isP1 = data.p1Id === targetId;
+        let isP2 = data.p2Id === targetId;
+
+        if (!isP1 && !isP2) return;
+
+        totalGames++;
+        const team = isP1 ? data.p1Team : data.p2Team;
+        const won = isP1 ? data.p1Won : (isP2 ? data.p2Won : false);
+        
+        const items = isP1 ? data.p1Items : data.p2Items;
+        const moves = isP1 ? data.p1Moves : data.p2Moves;
+        const abilities = isP1 ? data.p1Abilities : data.p2Abilities;
+        const teras = isP1 ? data.p1Tera : data.p2Tera;
+
+        team.forEach(mon => {
+          if (!stats[mon]) {
+             stats[mon] = { usage: 0, wins: 0, losses: 0, ties: 0, items: {}, moves: {}, abilities: {}, teras: {} };
+          }
+          stats[mon].usage++;
+          
+          if (data.hasWinner) {
+             if (won) stats[mon].wins++;
+             else stats[mon].losses++;
+          } else {
+             stats[mon].ties++;
+          }
+
+          if (items && items[mon]) {
+            stats[mon].items[items[mon]] = (stats[mon].items[items[mon]] || 0) + 1;
+          }
+          if (abilities && abilities[mon]) {
+            stats[mon].abilities[abilities[mon]] = (stats[mon].abilities[abilities[mon]] || 0) + 1;
+          }
+          if (teras && teras[mon]) {
+            stats[mon].teras[teras[mon]] = (stats[mon].teras[teras[mon]] || 0) + 1;
+          }
+          if (moves && moves[mon]) {
+            moves[mon].forEach(m => {
+               stats[mon].moves[m] = (stats[mon].moves[m] || 0) + 1;
+            });
+          }
+        });
+      });
+
+      if (totalGames === 0) {
+        resultsContainer.innerHTML = `<p style="margin-top:10px; color: #94a3b8;">No games found for player "${escapeHtml(inputName)}" in currently loaded replays.</p>`;
+        return;
+      }
+
+      // Sort primarily by usage (descending), then by wins (descending)
+      const sortedMons = Object.keys(stats).sort((a, b) => stats[b].usage - stats[a].usage || stats[b].wins - stats[a].wins);
+
+      let html = `
+        <div style="margin-top: 10px; margin-bottom: 10px; color: #94a3b8;">
+            Total games analyzed for <strong>${escapeHtml(inputName)}</strong>: ${totalGames}
+        </div>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th class="sprite-cell"></th>
+                    <th>Pokémon</th>
+                    <th>Usage</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Win Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+      `;
+
+      sortedMons.forEach(mon => {
+        const s = stats[mon];
+        const decisiveGames = s.wins + s.losses;
+        const winRate = decisiveGames > 0 ? Math.round((s.wins / decisiveGames) * 100) : 0;
+        const usageRate = Math.round((s.usage / totalGames) * 100);
+        
+        const primarySlug = sanitizeIconSlug(mon);
+        const spriteUrl = getMinispriteUrl(primarySlug);
+        const cleanName = escapeHtml(mon.endsWith('-*') ? mon.split('-')[0] : mon);
+        
+        html += `
+            <tr class="stats-row" onclick="this.nextElementSibling.classList.toggle('hidden')" title="Click to expand details">
+                <td class="sprite-cell">
+                    <img src="${spriteUrl}" alt="${cleanName}" style="image-rendering: pixelated; width: 40px; height: 30px; object-fit: contain;" 
+                    onerror="this.onerror=null; this.src='${getDexMinispriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getMinispriteUrl(getNoHyphenSlug(primarySlug))}'; this.onerror=function(){ this.src='${getMinispriteUrl(getBaseSpeciesSlug(mon))}'; } };" />
+                </td>
+                <td style="font-weight: 600;">
+                    ${cleanName} <span style="font-size: 0.7rem; color: #64748b; margin-left: 5px;">▼</span>
+                </td>
+                <td>${s.usage} (${usageRate}%)</td>
+                <td style="color: #4ade80;">${s.wins}</td>
+                <td style="color: #ef4444;">${s.losses}</td>
+                <td>${winRate}%</td>
+            </tr>
+            <tr class="details-row hidden">
+                <td colspan="6">
+                    <div class="stats-details">
+                        <div>
+                            <h4>Moves</h4>
+                            ${generateDetailsList(s.moves, s.usage)}
+                        </div>
+                        <div>
+                            <h4>Items</h4>
+                            ${generateDetailsList(s.items, s.usage)}
+                        </div>
+                        <div>
+                            <h4>Abilities</h4>
+                            ${generateDetailsList(s.abilities, s.usage)}
+                        </div>
+                        <div>
+                            <h4>Tera Types</h4>
+                            ${generateDetailsList(s.teras, s.usage)}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      resultsContainer.innerHTML = html;
+    };
+
+    function consolidateDict(teamList, dict, isSet = false) {
+      const baseMap = {};
+      teamList.forEach(mon => {
+         baseMap[mon.split('-')[0]] = mon;
+      });
+      const exactSet = new Set(teamList);
+      
+      const result = {};
+      for (const [key, val] of Object.entries(dict)) {
+        // Safe mapping to enforce correct stats tracking per form
+        let target = key;
+        if (exactSet.has(key)) {
+            target = key;
+        } else {
+            const base = key.split('-')[0];
+            if (baseMap[base]) target = baseMap[base];
+        }
+
+        if (isSet) {
+          if (!result[target]) result[target] = new Set();
+          val.forEach(v => result[target].add(v));
+        } else {
+          result[target] = val;
+        }
+      }
+      return result;
+    }
+
+    async function fetchReplayData(url) {
+      try {
+        const response = await fetch(url + '.json');
+        if (!response.ok) throw new Error('Failed to fetch replay data.');
+        const data = await response.json();
+        const log = data.log;
+
+        const p1Team = new Set(), p2Team = new Set();
+        let p1Name = "P1", p2Name = "P2";
+        let winnerRaw = null, tierName = null;
+
+        const slotToSpecies = {};
+        const itemsByPlayer = { p1: {}, p2: {} };
+        const movesByPlayer = { p1: {}, p2: {} };
+        const abilitiesByPlayer = { p1: {}, p2: {} };
+        const teraByPlayer = { p1: {}, p2: {} };
+
+        const lines = log.split('\n');
+        for (const line of lines) {
+          const parts = line.split('|');
+          if (parts.length < 2) continue;
+
+          if (parts[1] === 'player') {
+            if (parts[2] === 'p1' && parts[3]) p1Name = parts[3];
+            if (parts[2] === 'p2' && parts[3]) p2Name = parts[3];
+          }
+          if (parts[1] === 'win') winnerRaw = parts[2].trim();
+          if (parts[1] === 'tier') tierName = parts[2].trim();
+
+          if (parts[1] === 'poke') {
+            const player = parts[2];
+            const species = getNormalizedSpecies(parts[3].split(',')[0]);
+            if (player === 'p1') p1Team.add(species);
+            if (player === 'p2') p2Team.add(species);
+          }
+
+          if (parts[1] === 'switch' || parts[1] === 'drag' || parts[1] === 'detailschange' || parts[1] === '-formechange') {
+            const rawSlot = (parts[2] || '');
+            const player = rawSlot.substring(0, 2);
+            const slot = rawSlot.split(':')[0].trim();
+            const species = getNormalizedSpecies((parts[3] || '').split(',')[0]);
+            
+            if (species) {
+              const team = player === 'p1' ? p1Team : p2Team;
+              const baseSpecies = species.split('-')[0];
+              const wildcard = baseSpecies + '-*';
+              if (species !== wildcard && team.has(wildcard)) {
+                team.delete(wildcard);
+              }
+              team.add(species);
+              if (slot) slotToSpecies[slot] = species;
+            }
+          }
+
+          if (parts[1] === 'move') {
+            const rawSlot = parts[2] || '';
+            const player = rawSlot.substring(0, 2);
+            const slot = rawSlot.split(':')[0].trim();
+            const moveName = (parts[3] || '').trim();
+            if ((player === 'p1' || player === 'p2') && moveName && slotToSpecies[slot]) {
+              const species = slotToSpecies[slot];
+              if (!movesByPlayer[player][species]) movesByPlayer[player][species] = new Set();
+              movesByPlayer[player][species].add(moveName);
+            }
+          }
+
+          if (parts[1] === '-ability') {
+            const rawSlot = parts[2] || '';
+            const player = rawSlot.substring(0, 2);
+            const slot = rawSlot.split(':')[0].trim();
+            const ability = (parts[3] || '').trim();
+
+            let fromAbility = null;
+            for (let i = 4; i < parts.length; i++) {
+               const match = parts[i].match(regexFromAbility);
+               if (match) fromAbility = match[1].trim();
+            }
+
+            if (fromAbility && fromAbility !== ability) {
+               if ((player === 'p1' || player === 'p2') && slotToSpecies[slot]) {
+                   abilitiesByPlayer[player][slotToSpecies[slot]] = fromAbility;
+               }
+            } else {
+               if ((player === 'p1' || player === 'p2') && ability && slotToSpecies[slot]) {
+                   abilitiesByPlayer[player][slotToSpecies[slot]] = ability;
+               }
+            }
+          }
+
+          if (parts[1] === '-terastallize') {
+            const rawSlot = parts[2] || '';
+            const player = rawSlot.substring(0, 2);
+            const slot = rawSlot.split(':')[0].trim();
+            const tera = (parts[3] || '').trim();
+            if ((player === 'p1' || player === 'p2') && tera && slotToSpecies[slot]) {
+              teraByPlayer[player][slotToSpecies[slot]] = tera;
+            }
+          }
+
+          if (parts[1] === '-item' || parts[1] === '-enditem') {
+            const rawSlot = (parts[2] || '');
+            const player = rawSlot.substring(0, 2);
+            const slot = rawSlot.split(':')[0].trim();
+            const itemName = (parts[3] || '').trim();
+            if ((player === 'p1' || player === 'p2') && itemName && slotToSpecies[slot]) {
+              itemsByPlayer[player][slotToSpecies[slot]] = itemName;
+            }
+          }
+
+          if (parts[1] === '-activate' && regexPoltergeist.test(parts[3] || '') && parts[4]) {
+            const rawSlot = (parts[2] || '');
+            const player = rawSlot.substring(0, 2);
+            const slot = rawSlot.split(':')[0].trim();
+            const itemName = parts[4].trim();
+            if ((player === 'p1' || player === 'p2') && itemName && slotToSpecies[slot]) {
+              itemsByPlayer[player][slotToSpecies[slot]] = itemName;
+            }
+          }
+
+          let itemFromPart = null, abilityFromPart = null, ofSlotRaw = null;
+          for (let i = 2; i < parts.length; i++) {
+            if (!parts[i]) continue;
+            const fromItemMatch = parts[i].match(regexFromItem);
+            if (fromItemMatch) itemFromPart = fromItemMatch[1].trim();
+
+            const fromAbilityMatch = parts[i].match(regexFromAbility);
+            if (fromAbilityMatch) abilityFromPart = fromAbilityMatch[1].trim();
+
+            const ofMatch = parts[i].match(regexOf);
+            if (ofMatch) ofSlotRaw = ofMatch[1].trim();
+          }
+
+          if (itemFromPart) {
+            const holderRaw = ofSlotRaw || parts[2] || '';
+            const player = holderRaw.substring(0, 2);
+            const slot = holderRaw.split(':')[0].trim();
+            if ((player === 'p1' || player === 'p2') && slot && slotToSpecies[slot]) {
+              itemsByPlayer[player][slotToSpecies[slot]] = itemFromPart;
+            }
+          }
+          if (abilityFromPart && parts[1] !== '-ability') {
+            const holderRaw = ofSlotRaw || parts[2] || '';
+            const player = holderRaw.substring(0, 2);
+            const slot = holderRaw.split(':')[0].trim();
+            if ((player === 'p1' || player === 'p2') && slot && slotToSpecies[slot]) {
+              abilitiesByPlayer[player][slotToSpecies[slot]] = abilityFromPart;
+            }
+          }
+        }
+
+        let finalP1 = deduplicateTeamForms(p1Team).slice(0, 6).sort((a, b) => a.localeCompare(b));
+        let finalP2 = deduplicateTeamForms(p2Team).slice(0, 6).sort((a, b) => a.localeCompare(b));
+
+        const consolidatedP1Items = consolidateDict(finalP1, itemsByPlayer.p1);
+        const consolidatedP2Items = consolidateDict(finalP2, itemsByPlayer.p2);
+        const consolidatedP1Moves = consolidateDict(finalP1, movesByPlayer.p1, true);
+        const consolidatedP2Moves = consolidateDict(finalP2, movesByPlayer.p2, true);
+        const consolidatedP1Abilities = consolidateDict(finalP1, abilitiesByPlayer.p1);
+        const consolidatedP2Abilities = consolidateDict(finalP2, abilitiesByPlayer.p2);
+        const consolidatedP1Tera = consolidateDict(finalP1, teraByPlayer.p1);
+        const consolidatedP2Tera = consolidateDict(finalP2, teraByPlayer.p2);
+
+        return { 
+          p1Name, p2Name, finalP1, finalP2, winnerRaw, tierName,
+          itemsByPlayer: { p1: consolidatedP1Items, p2: consolidatedP2Items },
+          movesByPlayer: { p1: consolidatedP1Moves, p2: consolidatedP2Moves },
+          abilitiesByPlayer: { p1: consolidatedP1Abilities, p2: consolidatedP2Abilities },
+          teraByPlayer: { p1: consolidatedP1Tera, p2: consolidatedP2Tera }
+        };
+      } catch (err) {
+        alert(`Error parsing ${url}: ${err.message}`);
+        return null;
+      }
+    }
+
+    function deduplicateTeamForms(teamSet) {
+      const teamList = Array.from(teamSet);
+      const transformedSpecies = new Set();
+      const isUpgradedForm = (mon) => regexUpgradedForm.test(mon);
+
+      for (const mon of teamList) {
+        if (isUpgradedForm(mon)) transformedSpecies.add(mon.split('-')[0].trim().toLowerCase());
+      }
+      return teamList.filter(mon => {
+        if (isUpgradedForm(mon)) return true;
+        if (transformedSpecies.has(mon.split('-')[0].trim().toLowerCase())) return false;
+        return true;
+      });
+    }
+
+    function sanitizeIconSlug(rawName) {
+      if (!rawName) return '';
+      let name = rawName.split(',')[0].trim().toLowerCase();
+      if (name.endsWith('-*')) name = name.split('-')[0];
+      
+      const exactFormMap = {
+        'zacian-crowned': 'zacian-crowned', 'zamazenta-crowned': 'zamazenta-crowned',
+        'zygarde-complete': 'zygarde-complete', 'zygarde-10%': 'zygarde-10', 'zygarde-10': 'zygarde-10',
+        'groudon-primal': 'groudon-primal', 'kyogre-primal': 'kyogre-primal',
+        'necrozma-dusk-mane': 'necrozma-duskmane', 'necrozma-dawn-wings': 'necrozma-dawnwings', 'necrozma-ultra': 'necrozma-ultra',
+        'kyurem-black': 'kyurem-black', 'kyurem-white': 'kyurem-white',
+        'calyrex-ice': 'calyrex-ice', 'calyrex-shadow': 'calyrex-shadow'
+      };
+      if (exactFormMap[name]) return exactFormMap[name];
+      if (name.startsWith('arceus-') || name.startsWith('silvally-')) return name.replace(/\s+/g, '');
+      return name.replace(regexSlug, '');
+    }
+
+    function getNoHyphenSlug(slug) { return slug.replace(/-/g, ''); }
+    function getBaseSpeciesSlug(rawName) { return rawName.split(',')[0].split('-')[0].trim().toLowerCase().replace(regexNonAlphaNum, ''); }
+    function getMinispriteUrl(slug) { return `https://play.pokemonshowdown.com/sprites/gen5/${slug}.png`; }
+    function getDexMinispriteUrl(slug) { return `https://play.pokemonshowdown.com/sprites/dex/${slug}.png`; }
+
+    function sanitizeItemSlug(rawItem) {
+      if (!rawItem) return '';
+      return rawItem.toLowerCase().replace(/'/g, '').trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+    function getItemIconUrl(slug) { return `https://play.pokemonshowdown.com/sprites/itemicons/${slug}.png`; }
+
+    function extractArceusForms(pokemonList) {
+      const forms = [];
+      for (const mon of pokemonList) {
+        const lower = mon.toLowerCase();
+        if (lower.startsWith('arceus-')) {
+          const typePart = mon.split('-')[1];
+          if (typePart === '*') forms.push('?');
+          else if (typePart) forms.push(typePart.charAt(0).toUpperCase() + typePart.slice(1).toLowerCase());
+        } else if (lower === 'arceus') {
+          forms.push('Normal');
+        }
+      }
+      return forms;
+    }
+
+    function generateTeamText(pokemonList, items, moves, abilities, teras) {
+      let teamStr = "";
+      for (const mon of pokemonList) {
+        let lines = [];
+        const cleanMon = mon.endsWith('-*') ? mon.split('-')[0] : mon;
+        const item = items && items[mon] ? items[mon] : '';
+        if (item) {
+          lines.push(`${cleanMon} @ ${item}`);
+        } else {
+          lines.push(cleanMon);
+        }
+
+        const ability = abilities && abilities[mon] ? abilities[mon] : '';
+        if (ability) lines.push(`Ability: ${ability}`);
+
+        const tera = teras && teras[mon] ? teras[mon] : '';
+        if (tera) lines.push(`Tera Type: ${tera}`);
+
+        const monMoves = moves && moves[mon] ? Array.from(moves[mon]) : [];
+        for (const move of monMoves) {
+          lines.push(`- ${move}`);
+        }
+
+        teamStr += lines.join('\n') + '\n\n';
+      }
+      return teamStr.trim();
+    }
+
+    window.copyTeamToClipboard = function(btn) {
+      const text = btn.dataset.export;
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerHTML;
+        btn.textContent = '✓';
+        btn.style.color = '#4ade80';
+        setTimeout(() => {
+           btn.innerHTML = orig;
+           btn.style.color = '';
+        }, 1000);
+      });
+    }
+
+    function generateSpriteRowHtml(pokemonList, itemsBySpecies, movesBySpecies, abilitiesBySpecies, teraBySpecies) {
+      return pokemonList.map(mon => {
+        const primarySlug = sanitizeIconSlug(mon);
+        const revealedItem = itemsBySpecies && itemsBySpecies[mon] ? itemsBySpecies[mon] : undefined;
+        
+        let titleLines = [];
+        const cleanMon = mon.endsWith('-*') ? mon.split('-')[0] : mon;
+        titleLines.push(revealedItem ? `${cleanMon} @ ${revealedItem}` : cleanMon);
+        
+        const ability = abilitiesBySpecies && abilitiesBySpecies[mon] ? abilitiesBySpecies[mon] : '';
+        if (ability) titleLines.push(`Ability: ${ability}`);
+        
+        const tera = teraBySpecies && teraBySpecies[mon] ? teraBySpecies[mon] : '';
+        if (tera) titleLines.push(`Tera Type: ${tera}`);
+        
+        const moves = movesBySpecies && movesBySpecies[mon] ? Array.from(movesBySpecies[mon]) : [];
+        if (moves.length > 0) {
+          moves.forEach(m => titleLines.push(`- ${m}`));
+        }
+        
+        const tooltipContent = titleLines.join('<br>').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+        let itemBadgeHtml = '';
+        if (revealedItem) {
+          itemBadgeHtml = `<span class="item-badge"><img src="${getItemIconUrl(sanitizeItemSlug(revealedItem))}" alt="${revealedItem}" onerror="this.parentElement.style.display='none';"/></span>`;
+        }
+        return `
+          <span class="sprite-wrap" data-tooltip="${tooltipContent}">
+            <img class="mon-sprite" src="${getMinispriteUrl(primarySlug)}" alt="${mon}"
+              onerror="this.onerror=null; this.src='${getDexMinispriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getMinispriteUrl(getNoHyphenSlug(primarySlug))}'; this.onerror=function(){ this.src='${getMinispriteUrl(getBaseSpeciesSlug(mon))}'; this.onerror=function(){ this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'; } } };"
+            />
+            ${itemBadgeHtml}
+          </span>
+        `;
+      }).join('');
+    }
+
+    function renderReplayRow(
+      p1Name, p1Monsters, p1Items, p1Moves, p1Abilities, p1Tera, p1Won, 
+      p2Name, p2Monsters, p2Items, p2Moves, p2Abilities, p2Tera, p2Won, 
+      tierName, container, replayUrl, groupName
+    ) {
+      const p1Arceus = extractArceusForms(p1Monsters);
+      const p2Arceus = extractArceusForms(p2Monsters);
+
+      const p1ArceusHtml = p1Arceus.length > 0 ? `<span class="arceus-badge" title="Arceus ${p1Arceus.join(', ')}">${p1Arceus.join('/')}</span>` : '';
+      const p2ArceusHtml = p2Arceus.length > 0 ? `<span class="arceus-badge" title="Arceus ${p2Arceus.join(', ')}">${p2Arceus.join('/')}</span>` : '';
+      
+      const tierBadge = tierName ? `<div class="tier-badge" title="${tierName}">${tierName}</div>` : '';
+      const isPinned = pinnedReplays.some(r => r.url === replayUrl);
+
+      const p1ExportText = generateTeamText(p1Monsters, p1Items, p1Moves, p1Abilities, p1Tera);
+      const p2ExportText = generateTeamText(p2Monsters, p2Items, p2Moves, p2Abilities, p2Tera);
+
+      const row = document.createElement('div');
+      row.className = 'replay-card';
+      row.dataset.url = replayUrl;
+      
+      row.innerHTML = `
+        <div class="player-column p1">
+          <span class="player-name ${p1Won ? 'winner' : ''}" title="${p1Name}">${p1Name}</span>
+          <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p1ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
+          ${p1ArceusHtml}
+          <div class="sprite-row">${generateSpriteRowHtml(p1Monsters, p1Items, p1Moves, p1Abilities, p1Tera)}</div>
+        </div>
+        
+        <div class="center-column">
+          ${tierBadge}
+          <a href="${replayUrl}" target="_blank" rel="noopener noreferrer" class="vs-badge" title="Open Showdown Replay">VS</a>
+        </div>
+
+        <div class="player-column p2">
+          <div class="sprite-row">${generateSpriteRowHtml(p2Monsters, p2Items, p2Moves, p2Abilities, p2Tera)}</div>
+          ${p2ArceusHtml}
+          <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p2ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
+          <span class="player-name ${p2Won ? 'winner' : ''}" title="${p2Name}">${p2Name}</span>
+        </div>
+        
+        <div class="action-buttons">
+           <button class="pin-card-btn ${isPinned ? 'pinned' : ''}" title="Save Replay" onclick="togglePinReplay('${replayUrl}', '${groupName || ''}', this)">★</button>
+           <button class="remove-card-btn" title="Remove Replay" onclick="removeReplayCard(this, '${replayUrl}')">✕</button>
+        </div>
+      `;
+
+      if (container.classList.contains('replay-group')) {
+        container.querySelector('.group-header').insertAdjacentElement('afterend', row);
+      } else {
+        container.prepend(row);
+      }
+    }
+
+    // ---------- Custom Tooltip Initialization ----------
+    const tooltipEl = document.createElement('div');
+    tooltipEl.id = 'custom-tooltip';
+    document.body.appendChild(tooltipEl);
+    let isTooltipFrozen = false;
+
+    function updateTooltipPosition(e) {
+      let x = e.pageX + 15;
+      let y = e.pageY + 15;
+      
+      if (x + tooltipEl.offsetWidth > window.innerWidth + window.scrollX) {
+        x = e.pageX - tooltipEl.offsetWidth - 15;
+      }
+      if (y + tooltipEl.offsetHeight > window.innerHeight + window.scrollY) {
+        y = e.pageY - tooltipEl.offsetHeight - 15;
+      }
+      
+      tooltipEl.style.left = x + 'px';
+      tooltipEl.style.top = y + 'px';
+    }
+
+    function showTooltip(e, forceFreeze) {
+      const wrap = e.target.closest('.sprite-wrap');
+      if (wrap && wrap.dataset.tooltip) {
+        if (forceFreeze) e.preventDefault();
+        
+        tooltipEl.innerHTML = wrap.dataset.tooltip;
+        tooltipEl.style.display = 'block';
+        
+        if (forceFreeze) {
+          isTooltipFrozen = true;
+          tooltipEl.classList.add('frozen');
+        }
+        updateTooltipPosition(e);
+      }
+    }
+
+    document.addEventListener('mouseover', (e) => {
+      if (isTooltipFrozen) return;
+      showTooltip(e, false);
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isTooltipFrozen) return;
+      if (tooltipEl.style.display === 'block') {
+        updateTooltipPosition(e);
+      }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      if (isTooltipFrozen) return;
+      const wrap = e.target.closest('.sprite-wrap');
+      if (wrap && !wrap.contains(e.relatedTarget)) {
+        tooltipEl.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+      const wrap = e.target.closest('.sprite-wrap');
+      if (wrap && wrap.dataset.tooltip) {
+        showTooltip(e, true);
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (isTooltipFrozen && !tooltipEl.contains(e.target)) {
+        isTooltipFrozen = false;
+        tooltipEl.style.display = 'none';
+        tooltipEl.classList.remove('frozen');
+      }
+    });
+
+    // Initialize environment on load
+    loadStorage();
+    renderAltGroupsList();
+  </script>
+</body>
+</html>
