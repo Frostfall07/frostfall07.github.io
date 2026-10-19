@@ -11,12 +11,14 @@
       --accent: #38bdf8;
       --text: #f8fafc;
       --border: #334155;
+      --slot: 88px;                                          /* sprite slot size */
+      --row-w: calc(var(--slot) * 6 + 5 * 4px + 16px + 2px); /* 6 slots + gaps + padding + border */
     }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      max-width: 1380px;
+      max-width: 1500px;
       margin: 2rem auto;
       padding: 0 1rem;
     }
@@ -215,7 +217,7 @@
     .pin-group-btn:hover { color: #fbbf24; }
     .pin-group-btn.pinned { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.4); }
 
-    /* Strict Grid Alignment for Replay Cards */
+    /* Fixed columns: identical x-positions in every card */
     .replay-card {
       background: var(--card-bg);
       border-radius: 8px;
@@ -223,10 +225,21 @@
       border: 1px solid var(--border);
       margin-bottom: 8px;
       display: grid;
-      grid-template-columns: minmax(150px, 1fr) auto 145px auto minmax(150px, 1fr) 28px;
+      grid-template-columns: var(--row-w) 145px var(--row-w) 28px;
+      justify-content: start;
       align-items: center;
       gap: 12px;
       overflow-x: auto;
+    }
+    /* Ungrouped cards get the same offset as grouped ones (3px border + 12px padding) */
+    #replayList > .replay-card { margin-left: 15px; }
+
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: var(--row-w);
+      min-width: 0;
     }
 
     .player-meta {
@@ -289,19 +302,20 @@
     /* Fixed 6-Slot Grid for Pokemon Sprites */
     .sprite-row {
       display: grid;
-      grid-template-columns: repeat(6, 56px);
+      grid-template-columns: repeat(6, var(--slot));
       gap: 4px;
       background: #0f172a75;
       padding: 6px 8px;
       border-radius: 8px;
       border: 1px solid #1e293b;
-      flex-shrink: 0;
+      width: var(--row-w);
+      box-sizing: border-box;
     }
 
     .sprite-wrap {
       position: relative;
-      width: 56px;
-      height: 56px;
+      width: var(--slot);
+      height: var(--slot);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -318,8 +332,8 @@
       border: 1px dashed #1e293b;
     }
     .sprite-wrap img.mon-sprite {
-      width: 52px;
-      height: 52px;
+      width: calc(var(--slot) - 4px);
+      height: calc(var(--slot) - 4px);
       object-fit: contain;
       display: block;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
@@ -327,10 +341,10 @@
 
     .item-badge {
       position: absolute;
-      bottom: 0px;
-      right: 0px;
-      width: 22px;
-      height: 22px;
+      bottom: 0;
+      right: 0;
+      width: 28px;
+      height: 28px;
       border-radius: 4px;
       background: #0f172ae6;
       border: 1px solid #475569;
@@ -342,8 +356,8 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }
     .item-badge img {
-      width: 18px;
-      height: 18px;
+      width: 24px;
+      height: 24px;
       object-fit: contain;
       image-rendering: pixelated;
     }
@@ -1340,30 +1354,32 @@
       row.dataset.url = replayUrl;
       
       row.innerHTML = `
-        <div class="player-meta p1">
-          <span class="player-name ${p1Won ? 'winner' : ''}" title="${p1Name}">${p1Name}</span>
-          <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p1ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
-          ${p1ArceusHtml}
+        <div class="side">
+          <div class="player-meta p1">
+            <span class="player-name ${p1Won ? 'winner' : ''}" title="${p1Name}">${p1Name}</span>
+            <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p1ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
+            ${p1ArceusHtml}
+          </div>
+          <div class="sprite-row">${generateSpriteRowHtml(p1Monsters, p1Items, p1Moves, p1Abilities, p1Tera)}</div>
         </div>
-        
-        <div class="sprite-row">${generateSpriteRowHtml(p1Monsters, p1Items, p1Moves, p1Abilities, p1Tera)}</div>
-        
+
         <div class="center-column">
           ${tierBadge}
           <a href="${replayUrl}" target="_blank" rel="noopener noreferrer" class="vs-badge" title="Open Showdown Replay">VS</a>
         </div>
 
-        <div class="sprite-row">${generateSpriteRowHtml(p2Monsters, p2Items, p2Moves, p2Abilities, p2Tera)}</div>
-
-        <div class="player-meta p2">
-          ${p2ArceusHtml}
-          <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p2ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
-          <span class="player-name ${p2Won ? 'winner' : ''}" title="${p2Name}">${p2Name}</span>
+        <div class="side">
+          <div class="player-meta p2">
+            ${p2ArceusHtml}
+            <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p2ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
+            <span class="player-name ${p2Won ? 'winner' : ''}" title="${p2Name}">${p2Name}</span>
+          </div>
+          <div class="sprite-row">${generateSpriteRowHtml(p2Monsters, p2Items, p2Moves, p2Abilities, p2Tera)}</div>
         </div>
-        
+
         <div class="action-buttons">
-           <button class="pin-card-btn ${isPinned ? 'pinned' : ''}" title="Save Replay" onclick="togglePinReplay('${replayUrl}', '${groupName || ''}', this)">★</button>
-           <button class="remove-card-btn" title="Remove Replay" onclick="removeReplayCard(this, '${replayUrl}')">✕</button>
+          <button class="pin-card-btn ${isPinned ? 'pinned' : ''}" title="Save Replay" onclick="togglePinReplay('${replayUrl}', '${groupName || ''}', this)">★</button>
+          <button class="remove-card-btn" title="Remove Replay" onclick="removeReplayCard(this, '${replayUrl}')">✕</button>
         </div>
       `;
 
