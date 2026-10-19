@@ -16,7 +16,7 @@
       font-family: system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      max-width: 1100px;
+      max-width: 1380px;
       margin: 2rem auto;
       padding: 0 1rem;
     }
@@ -63,7 +63,7 @@
       color: white;
     }
 
-    /* Alt Manager Styles */
+    /* Alt Manager & Stats Styles */
     .alt-manager, .stats-manager {
       margin-bottom: 1.5rem;
       border: 1px solid var(--border);
@@ -133,7 +133,7 @@
       background: #334155 !important;
     }
     .sprite-cell {
-      width: 50px;
+      width: 64px;
       text-align: center;
     }
 
@@ -215,38 +215,40 @@
     .pin-group-btn:hover { color: #fbbf24; }
     .pin-group-btn.pinned { color: #fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.4); }
 
+    /* Strict Grid Alignment for Replay Cards */
     .replay-card {
       background: var(--card-bg);
       border-radius: 8px;
-      padding: 8px 14px;
+      padding: 10px 14px;
       border: 1px solid var(--border);
       margin-bottom: 8px;
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) auto 145px auto minmax(150px, 1fr) 28px;
       align-items: center;
-      justify-content: space-between;
       gap: 12px;
+      overflow-x: auto;
     }
 
-    .player-column {
+    .player-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex: 1;
+      gap: 6px;
+      min-width: 0;
     }
-    .player-column.p2 {
+    .player-meta.p1 {
       justify-content: flex-end;
+    }
+    .player-meta.p2 {
+      justify-content: flex-start;
     }
 
     .player-name {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 260px;
-      display: flex;
-      align-items: center;
       transition: all 0.2s ease;
     }
 
@@ -260,13 +262,13 @@
       border: none;
       color: #64748b;
       cursor: pointer;
-      padding: 0 4px;
+      padding: 2px 4px;
       font-size: 1rem;
       transition: color 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 24px;
+      flex-shrink: 0;
     }
     .copy-team-btn:hover {
       color: #38bdf8;
@@ -278,78 +280,104 @@
       color: #fbbf24;
       background: #451a03a0;
       border: 1px solid #78350f;
-      padding: 1px 5px;
+      padding: 2px 5px;
       border-radius: 4px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
+    /* Fixed 6-Slot Grid for Pokemon Sprites */
     .sprite-row {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      background: #0f172a60;
-      padding: 2px 6px;
-      border-radius: 6px;
+      display: grid;
+      grid-template-columns: repeat(6, 56px);
+      gap: 4px;
+      background: #0f172a75;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      flex-shrink: 0;
     }
 
     .sprite-wrap {
       position: relative;
-      width: 40px;
-      height: 30px;
-      flex: none;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: context-menu;
+      border-radius: 6px;
+      transition: background 0.15s ease;
+    }
+    .sprite-wrap:not(.empty-slot):hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .sprite-wrap.empty-slot {
+      cursor: default;
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px dashed #1e293b;
     }
     .sprite-wrap img.mon-sprite {
-      width: 40px;
-      height: 30px;
+      width: 52px;
+      height: 52px;
       object-fit: contain;
-      image-rendering: pixelated;
       display: block;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
     }
+
     .item-badge {
       position: absolute;
-      bottom: -2px;
-      right: -2px;
-      width: 16px;
-      height: 16px;
-      border-radius: 3px;
-      background: #000000b0;
+      bottom: 0px;
+      right: 0px;
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: #0f172ae6;
       border: 1px solid #475569;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
       pointer-events: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.6);
     }
     .item-badge img {
-      width: 100%;
-      height: 100%;
+      width: 18px;
+      height: 18px;
       object-fit: contain;
       image-rendering: pixelated;
     }
 
+    /* Fixed Center Format Column */
     .center-column {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 4px;
+      width: 145px;
+      text-align: center;
+      flex-shrink: 0;
     }
     .tier-badge {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       font-weight: bold;
       color: #94a3b8;
-      background: #0f172a80;
+      background: #0f172a90;
       border: 1px solid var(--border);
-      padding: 2px 6px;
+      padding: 3px 8px;
       border-radius: 4px;
       white-space: nowrap;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .vs-badge {
       font-size: 0.75rem;
       font-weight: bold;
       color: var(--accent);
-      padding: 2px 8px;
+      padding: 2px 10px;
       border-radius: 4px;
       text-decoration: none;
       transition: background-color 0.15s ease;
@@ -363,7 +391,9 @@
     .action-buttons {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
     }
     .action-buttons button {
       background: transparent;
@@ -686,11 +716,11 @@
              const header = document.createElement('div');
              header.className = 'group-header';
              header.innerHTML = `
-                <span>${res.groupName}</span>
-                <div class="group-actions">
-                  <button class="pin-group-btn ${isGroupPinned ? 'pinned' : ''}" title="Save Group" onclick="togglePinGroup('${res.groupName}', this)">★</button>
-                  <button class="remove-group-btn" title="Clear Group" onclick="removeReplayGroup(this, '${res.groupName}')">✕</button>
-                </div>
+               <span>${res.groupName}</span>
+               <div class="group-actions">
+                 <button class="pin-group-btn ${isGroupPinned ? 'pinned' : ''}" title="Save Group" onclick="togglePinGroup('${res.groupName}', this)">★</button>
+                 <button class="remove-group-btn" title="Clear Group" onclick="removeReplayGroup(this, '${res.groupName}')">✕</button>
+               </div>
              `;
              
              existingGroup.appendChild(header);
@@ -886,14 +916,15 @@
         const usageRate = Math.round((s.usage / totalGames) * 100);
         
         const primarySlug = sanitizeIconSlug(mon);
-        const spriteUrl = getMinispriteUrl(primarySlug);
+        const noHyphen = getNoHyphenSlug(primarySlug);
+        const baseSlug = getBaseSpeciesSlug(mon);
         const cleanName = escapeHtml(mon.endsWith('-*') ? mon.split('-')[0] : mon);
         
         html += `
             <tr class="stats-row" onclick="this.nextElementSibling.classList.toggle('hidden')" title="Click to expand details">
                 <td class="sprite-cell">
-                    <img src="${spriteUrl}" alt="${cleanName}" style="image-rendering: pixelated; width: 40px; height: 30px; object-fit: contain;" 
-                    onerror="this.onerror=null; this.src='${getDexMinispriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getMinispriteUrl(getNoHyphenSlug(primarySlug))}'; this.onerror=function(){ this.src='${getMinispriteUrl(getBaseSpeciesSlug(mon))}'; } };" />
+                    <img src="${getLargeSpriteUrl(primarySlug)}" alt="${cleanName}" style="width: 48px; height: 48px; object-fit: contain;" 
+                    onerror="this.onerror=null; this.src='${getDexSpriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getLargeSpriteUrl(noHyphen)}'; this.onerror=function(){ this.src='${getMinispriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getLargeSpriteUrl(baseSlug)}'; } } };" />
                 </td>
                 <td style="font-weight: 600;">
                     ${cleanName} <span style="font-size: 0.7rem; color: #64748b; margin-left: 5px;">▼</span>
@@ -1170,8 +1201,11 @@
 
     function getNoHyphenSlug(slug) { return slug.replace(/-/g, ''); }
     function getBaseSpeciesSlug(rawName) { return rawName.split(',')[0].split('-')[0].trim().toLowerCase().replace(regexNonAlphaNum, ''); }
+    
+    // Upgraded High-Resolution Picture Endpoints + Fallback Chain
+    function getLargeSpriteUrl(slug) { return `https://play.pokemonshowdown.com/sprites/home-centered/${slug}.png`; }
+    function getDexSpriteUrl(slug) { return `https://play.pokemonshowdown.com/sprites/dex/${slug}.png`; }
     function getMinispriteUrl(slug) { return `https://play.pokemonshowdown.com/sprites/gen5/${slug}.png`; }
-    function getDexMinispriteUrl(slug) { return `https://play.pokemonshowdown.com/sprites/dex/${slug}.png`; }
 
     function sanitizeItemSlug(rawItem) {
       if (!rawItem) return '';
@@ -1235,9 +1269,19 @@
       });
     }
 
+    // Always generates exactly 6 slots so teams with <6 Pokémon never break column alignment
     function generateSpriteRowHtml(pokemonList, itemsBySpecies, movesBySpecies, abilitiesBySpecies, teraBySpecies) {
-      return pokemonList.map(mon => {
+      const slots = [];
+      for (let i = 0; i < 6; i++) {
+        const mon = pokemonList[i];
+        if (!mon) {
+          slots.push(`<span class="sprite-wrap empty-slot"></span>`);
+          continue;
+        }
+
         const primarySlug = sanitizeIconSlug(mon);
+        const noHyphen = getNoHyphenSlug(primarySlug);
+        const baseSlug = getBaseSpeciesSlug(mon);
         const revealedItem = itemsBySpecies && itemsBySpecies[mon] ? itemsBySpecies[mon] : undefined;
         
         let titleLines = [];
@@ -1261,15 +1305,17 @@
         if (revealedItem) {
           itemBadgeHtml = `<span class="item-badge"><img src="${getItemIconUrl(sanitizeItemSlug(revealedItem))}" alt="${revealedItem}" onerror="this.parentElement.style.display='none';"/></span>`;
         }
-        return `
+
+        slots.push(`
           <span class="sprite-wrap" data-tooltip="${tooltipContent}">
-            <img class="mon-sprite" src="${getMinispriteUrl(primarySlug)}" alt="${mon}"
-              onerror="this.onerror=null; this.src='${getDexMinispriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getMinispriteUrl(getNoHyphenSlug(primarySlug))}'; this.onerror=function(){ this.src='${getMinispriteUrl(getBaseSpeciesSlug(mon))}'; this.onerror=function(){ this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'; } } };"
+            <img class="mon-sprite" src="${getLargeSpriteUrl(primarySlug)}" alt="${mon}"
+              onerror="this.onerror=null; this.src='${getDexSpriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getLargeSpriteUrl(noHyphen)}'; this.onerror=function(){ this.src='${getDexSpriteUrl(noHyphen)}'; this.onerror=function(){ this.src='${getMinispriteUrl(primarySlug)}'; this.onerror=function(){ this.src='${getLargeSpriteUrl(baseSlug)}'; this.onerror=function(){ this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'; } } } } };"
             />
             ${itemBadgeHtml}
           </span>
-        `;
-      }).join('');
+        `);
+      }
+      return slots.join('');
     }
 
     function renderReplayRow(
@@ -1294,20 +1340,22 @@
       row.dataset.url = replayUrl;
       
       row.innerHTML = `
-        <div class="player-column p1">
+        <div class="player-meta p1">
           <span class="player-name ${p1Won ? 'winner' : ''}" title="${p1Name}">${p1Name}</span>
           <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p1ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
           ${p1ArceusHtml}
-          <div class="sprite-row">${generateSpriteRowHtml(p1Monsters, p1Items, p1Moves, p1Abilities, p1Tera)}</div>
         </div>
+        
+        <div class="sprite-row">${generateSpriteRowHtml(p1Monsters, p1Items, p1Moves, p1Abilities, p1Tera)}</div>
         
         <div class="center-column">
           ${tierBadge}
           <a href="${replayUrl}" target="_blank" rel="noopener noreferrer" class="vs-badge" title="Open Showdown Replay">VS</a>
         </div>
 
-        <div class="player-column p2">
-          <div class="sprite-row">${generateSpriteRowHtml(p2Monsters, p2Items, p2Moves, p2Abilities, p2Tera)}</div>
+        <div class="sprite-row">${generateSpriteRowHtml(p2Monsters, p2Items, p2Moves, p2Abilities, p2Tera)}</div>
+
+        <div class="player-meta p2">
           ${p2ArceusHtml}
           <button class="copy-team-btn" title="Copy Team" data-export="${escapeHtml(p2ExportText)}" onclick="copyTeamToClipboard(this)">${clipboardSVG}</button>
           <span class="player-name ${p2Won ? 'winner' : ''}" title="${p2Name}">${p2Name}</span>
